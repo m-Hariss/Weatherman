@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class LoadFileData:
     def __init__(self, year, month):
         self.year = year
@@ -78,8 +80,11 @@ class CalculateTemperatureValues:
                         required_date = single_date_record_key
                         required_temperature_number = temperature
                         
-        splitted_required_date = required_date.split('-')
-        return f'{required_temperature_number}{unit} on {months[splitted_required_date[1]]} {splitted_required_date[0]}'
+        # splitted_required_date = required_date.split('-')
+        return {
+            "temperature": required_temperature_number,
+            "date": required_date
+        }
   
         
 months = {
@@ -97,7 +102,9 @@ months = {
     "12": "Dec",
 }
 
+
 def main():
+
     year = input("Please Enter Year and Month: ")
     splitted_year = year.split('/')
     
@@ -108,14 +115,23 @@ def main():
             files_data = LoadFileData(splitted_year[0], None)
             
         calObj = CalculateTemperatureValues(files_data.data)
+        highest_temp = calObj.calculateTemperature('H')
+        print(f'Highest: {highest_temp["temperature"]}C on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
+
+        lowest_temp = calObj.calculateTemperature('L')
+        print(f'Lowest: {lowest_temp["temperature"]}C on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
+
+        high_humidity = calObj.calculateTemperature('Hu')
+        print(f'Humidity: {high_humidity["temperature"]}% on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
         
-        print(f'Highest', calObj.calculateTemperature('H'))
-        print(f'Lowest', calObj.calculateTemperature('L'))
-        print(f'Humidity', calObj.calculateTemperature('Hu'))
+        avg_high_temp = calObj.calculateTemperature('avg_H')
+        print(f'Highest Average: {avg_high_temp["temperature"]}C')
         
-        print(f'Highest Average', calObj.calculateTemperature('avg_H'))
-        print(f'Lowest Average', calObj.calculateTemperature('avg_L'))
-        print(f'Average Mean Humidity', calObj.calculateTemperature('avg_Hu'))
+        avg_low_temp = calObj.calculateTemperature('avg_L')
+        print(f'Lowest Average: {avg_low_temp["temperature"]}C')
+        
+        avg_mean_humidity = calObj.calculateTemperature('avg_Hu')
+        print(f'Average Mean Humidity: {avg_mean_humidity["temperature"]}%')
     except: 
         print('Some thing went wrong ')
     
