@@ -111,7 +111,7 @@ class CalculateTemperatureValues:
     def _getFieldFromSingleDate(self, single_file_record, single_date_key, field):
             return single_file_record[single_date_key][field]
          
-    def displayReport(self): 
+    def getSingleDateRecord(self): 
         for single_file_record in self.data:
             for date in single_file_record.keys():
                 max_temp = single_file_record[date]['Max TemperatureC']
@@ -162,9 +162,11 @@ def displayMonthData(year, month):
         
     avg_mean_humidity = calObj.calculateTemperature('avg_Hu')
     print(f'Average Mean Humidity: {avg_mean_humidity["temperature"] or 0}%')
+    displayReport(calObj)
     
+def displayReport(calObj):
     swap = True
-    for value in calObj.displayReport():
+    for value in calObj.getSingleDateRecord():
         splitted_date  = value and value["date"].split('-')
         if(splitted_date): print(splitted_date[2], end='  ')
         number_range = value and value["value"]
