@@ -1,9 +1,22 @@
 from datetime import datetime
-from termcolor import colored
 
 RED = '\033[31m'
 BLUE = '\033[34m'
 RESET = '\033[0m'
+months = {
+    "1": "Jan",
+    "2": "Feb",
+    "3": "Mar",
+    "4": "Apr",
+    "5": "May",
+    "6": "Jun",
+    "7": "Jul",
+    "8": "Aug",
+    "9": "Sep",
+    "10": "Oct",
+    "11": "Nov",
+    "12": "Dec",
+}
 
 class LoadFileData:
     def __init__(self, year, month):
@@ -118,21 +131,7 @@ class CalculateTemperatureValues:
                 min_temp = single_file_record[date]['Min TemperatureC']
                 yield (max_temp and {"date": date, "value": max_temp}) or 0
                 yield (min_temp and {"date": date, "value": min_temp}) or 0
-        
-months = {
-    "1": "Jan",
-    "2": "Feb",
-    "3": "Mar",
-    "4": "Apr",
-    "5": "May",
-    "6": "Jun",
-    "7": "Jul",
-    "8": "Aug",
-    "9": "Sep",
-    "10": "Oct",
-    "11": "Nov",
-    "12": "Dec",
-}
+
 
 def displayYearData(year):
     files_data = LoadFileData(year, None)
@@ -150,7 +149,7 @@ def displayYearData(year):
     # print(high_humidity["date"])
     print(f'Humidity: {high_humidity["temperature"] or 0}% on {datetime.strptime(high_humidity["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
-def displayMonthData(year, month):
+def displayMonthData(year, month, bar):
     files_data = LoadFileData(year, month)
     calObj = CalculateTemperatureValues(files_data.data)
     
@@ -162,26 +161,37 @@ def displayMonthData(year, month):
         
     avg_mean_humidity = calObj.calculateTemperature('avg_Hu')
     print(f'Average Mean Humidity: {avg_mean_humidity["temperature"] or 0}%')
-    displayReport(calObj)
+    displayReport(calObj, bar = bar)
     
-def displayReport(calObj):
+def displayReport(calObj, bar = 2):
     swap = True
+    display_record = {}
     for value in calObj.getSingleDateRecord():
         splitted_date  = value and value["date"].split('-')
-        if(splitted_date): 
-            print(splitted_date[2], end='  ')
-        else:
+        if(not splitted_date): 
             swap = not swap
             continue
-        number_range = value and value["value"]
+            
+        display_record["date"] = splitted_date[2]
+        temperature = value and value["value"]
+        display_record[(swap and 'max_temp') or 'min_temp'] = temperature
+        signs = ''
         
-        for number in range(int(number_range)):
+        for value in range(int(display_record[(swap and 'max_temp') or 'min_temp'])):
             if(swap):
-                print(f'{RED}+', end='')
+                signs += f'{RED}+'
             else:
-                print(f'{BLUE}+', end='')
+                signs += f'{BLUE}+'
                 
-        print(f'{RESET} {number_range}C')
+        display_record[(swap and 'max_temp_sign') or 'min_temp_sign'] = signs
+        if bar < 2:
+            if(not swap): print(f'{display_record["date"]} {display_record["min_temp_sign"]}{display_record["max_temp_sign"]}{RESET} {display_record["min_temp"]}-{display_record["max_temp"]}')
+        else: 
+            if(swap):
+                print(f'{display_record["date"]} {display_record["max_temp_sign"]}{RESET} {display_record["max_temp"]}')
+            else:
+                print(f'{display_record["date"]} {display_record["min_temp_sign"]}{RESET} {display_record["min_temp"]}')
+                
         swap = not swap
     
 def main():
@@ -192,7 +202,8 @@ def main():
     for file_date in splitted_files_date:
         splitted_file_date = file_date.split('/')
         if len(splitted_file_date) >= 2:
-            displayMonthData(splitted_file_date[0], splitted_file_date[1])
+            bar = int(input("Please Enter Number of Report Bars 1-2: "))
+            displayMonthData(splitted_file_date[0], splitted_file_date[1], bar)
         else: 
             displayYearData(splitted_file_date[0])
     
