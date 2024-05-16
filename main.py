@@ -1,13 +1,18 @@
 from datetime import datetime
+from termcolor import colored
+
+RED = '\033[31m'
+BLUE = '\033[34m'
+RESET = '\033[0m'
 
 class LoadFileData:
     def __init__(self, year, month):
         self.year = year
         self.month = month
         self.data = []
-        self.fileConnection()
+        self.readDatadromFiles()
         
-    def fileConnection(self):
+    def readDatadromFiles(self):
         if self.month == None:
             for month in months.values():
                 self.readDataFromSingleFile(month)
@@ -15,7 +20,6 @@ class LoadFileData:
             if len(self.data) == 0:
                 raise Exception("No file is found")
         else: 
-            # print(self.data)
             self.readDataFromSingleFile(months[self.month])
             
     def readDataFromSingleFile(self, month):
@@ -63,29 +67,57 @@ class CalculateTemperatureValues:
             raise Exception("Incorrect Input")
     
     def _calculateTemperatureWithField(self, field, unit, maxNumber):
-        required_temperature_number = None
-        required_date = ''
-        
+        # required_number = None
+        # required_date = ''
+        required_data = ""
         for single_file_record in self.data:
-            # print(single_file_record.keys())
-            for single_date_record_key in single_file_record.keys():
-                temperature = single_file_record[single_date_record_key][field]
+            required_data = self._calculateInfoFromFile(single_file_record, field, maxNumber)
+            # for single_date_key in single_file_record.keys():
+            #     temperature = single_file_record[single_date_key][field]
                 
-                if(required_temperature_number == None or required_temperature_number == ''): required_temperature_number = temperature
-                if temperature != '':
-                    if maxNumber and int(temperature) > int(required_temperature_number):
-                        required_temperature_number = temperature
-                        required_date = single_date_record_key
-                    elif not maxNumber and  int(temperature) < int(required_temperature_number):
-                        required_date = single_date_record_key
-                        required_temperature_number = temperature
+            #     if(required_number == None or required_number == ''): required_number = temperature
+            #     if temperature != '':
+            #         if maxNumber and int(temperature) > int(required_number):
+            #             required_number = temperature
+            #             required_date = single_date_key
+            #         elif not maxNumber and  int(temperature) < int(required_number):
+            #             required_date = single_date_key
+            #             required_number = temperature
                         
-        # splitted_required_date = required_date.split('-')
+        return required_data
+        # return {
+        #     "temperature": required_number,
+        #     "date": required_date
+        # }
+        
+    def _calculateInfoFromFile(self, single_file_record, field, maxNumber):
+        required_number = None
+        required_date = ''
+        for single_date_key in single_file_record.keys():
+                temperature = self._getFieldFromSingleDate(single_file_record, single_date_key, field)
+                if(not required_number): required_number = temperature
+                if temperature != '':
+                    if maxNumber and int(temperature) > int(required_number):
+                        required_number = temperature
+                        required_date = single_date_key
+                    elif not maxNumber and  int(temperature) < int(required_number):
+                        required_date = single_date_key
+                        required_number = temperature
         return {
-            "temperature": required_temperature_number,
+            "temperature": required_number,
             "date": required_date
         }
-  
+        
+    def _getFieldFromSingleDate(self, single_file_record, single_date_key, field):
+            return single_file_record[single_date_key][field]
+         
+    def displayReport(self): 
+        for single_file_record in self.data:
+            for date in single_file_record.keys():
+                max_temp = single_file_record[date]['Max TemperatureC']
+                min_temp = single_file_record[date]['Min TemperatureC']
+                yield (max_temp and {"date": date, "value": max_temp}) or 0
+                yield (min_temp and {"date": date, "value": min_temp}) or 0
         
 months = {
     "1": "Jan",
@@ -107,13 +139,16 @@ def displayYearData(year):
     calObj = CalculateTemperatureValues(files_data.data)
     
     highest_temp = calObj.calculateTemperature('H')
+    # print(highest_temp["date"])
     print(f'Highest: {highest_temp["temperature"] or 0}C on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
     lowest_temp = calObj.calculateTemperature('L')
-    print(f'Lowest: {lowest_temp["temperature"] or 0}C on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
+    # print(lowest_temp["date"])
+    print(f'Lowest: {lowest_temp["temperature"] or 0}C on {datetime.strptime(lowest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
     high_humidity = calObj.calculateTemperature('Hu')
-    print(f'Humidity: {high_humidity["temperature"] or 0}% on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
+    # print(high_humidity["date"])
+    print(f'Humidity: {high_humidity["temperature"] or 0}% on {datetime.strptime(high_humidity["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
 def displayMonthData(year, month):
     files_data = LoadFileData(year, month)
@@ -121,25 +156,40 @@ def displayMonthData(year, month):
     
     avg_high_temp = calObj.calculateTemperature('avg_H')
     print(f'Highest Average: {avg_high_temp["temperature"] or 0}C')
-        
+    
     avg_low_temp = calObj.calculateTemperature('avg_L')
     print(f'Lowest Average: {avg_low_temp["temperature"] or 0}C')
         
     avg_mean_humidity = calObj.calculateTemperature('avg_Hu')
     print(f'Average Mean Humidity: {avg_mean_humidity["temperature"] or 0}%')
     
+    swap = True
+    for value in calObj.displayReport():
+        splitted_date  = value and value["date"].split('-')
+        if(splitted_date): print(splitted_date[2], end='  ')
+        number_range = value and value["value"]
+        
+        for number in range(int(number_range)):
+            if(swap):
+                print(f'{RED}+', end='')
+            else:
+                print(f'{BLUE}+', end='')
+                
+        if(splitted_date): print(RESET)
+        swap = not swap
+    
 def main():
     
     year = input("Please Enter Year and Month: ")
     splitted_year = year.split('/')
     
-    try: 
-        if len(splitted_year) >= 2:
-            displayMonthData(splitted_year[0], splitted_year[1])
-        else: 
-            displayYearData(splitted_year[0])
+    # try: 
+    if len(splitted_year) >= 2:
+        displayMonthData(splitted_year[0], splitted_year[1])
+    else: 
+        displayYearData(splitted_year[0])
         
-    except: 
-        print('Some thing went wrong ')
+    # except: 
+    # print('Some thing went wrong ')
     
 main()
