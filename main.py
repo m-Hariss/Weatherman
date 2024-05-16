@@ -168,7 +168,11 @@ def displayReport(calObj):
     swap = True
     for value in calObj.getSingleDateRecord():
         splitted_date  = value and value["date"].split('-')
-        if(splitted_date): print(splitted_date[2], end='  ')
+        if(splitted_date): 
+            print(splitted_date[2], end='  ')
+        else:
+            swap = not swap
+            continue
         number_range = value and value["value"]
         
         for number in range(int(number_range)):
@@ -177,7 +181,7 @@ def displayReport(calObj):
             else:
                 print(f'{BLUE}+', end='')
                 
-        if(splitted_date): print(RESET)
+        print(f'{RESET} {number_range}C')
         swap = not swap
     
 def main():
