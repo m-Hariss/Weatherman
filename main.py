@@ -113,10 +113,21 @@ class CalculateTemperatureValues:
             raise Exception("Incorrect Input")
     
     def _calculateTemperatureWithField(self, field, maxNumber):
+        latest_data = ""
         required_data = ""
         for single_file_record in self.data.data:
-            required_data = self._calculateInfoFromFile(single_file_record, field, maxNumber)
-                        
+            latest_data = self._calculateInfoFromFile(single_file_record, field, maxNumber)
+            if(not required_data):
+                required_data = latest_data
+                
+            if(maxNumber and latest_data["temperature"] > required_data["temperature"]):
+                required_data = latest_data 
+            else:
+                if latest_data["temperature"] < required_data["temperature"]:
+                    required_data = latest_data 
+                    
+            print(required_data)
+               
         return required_data
         
     def _calculateInfoFromFile(self, single_file_record, field, maxNumber):
@@ -126,10 +137,10 @@ class CalculateTemperatureValues:
                 temperature = self._getFieldFromSingleDate(single_file_record, single_date_key, field)
                 if(not required_number): required_number = temperature
                 if temperature != '':
-                    if maxNumber and int(temperature) > int(required_number):
+                    if maxNumber and int(temperature) >= int(required_number):
                         required_number = temperature
                         required_date = single_date_key
-                    elif not maxNumber and  int(temperature) < int(required_number):
+                    elif not maxNumber and  int(temperature) <= int(required_number):
                         required_date = single_date_key
                         required_number = temperature
         return {
