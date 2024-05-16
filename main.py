@@ -1,5 +1,11 @@
 from datetime import datetime
-
+"""_summary_
+    global variables
+    RED is used to display red color text on console
+    BLUE is used to display blue color text on console
+    RESET is used to display default color text on console
+    months is dict of month name with month number
+"""
 RED = '\033[31m'
 BLUE = '\033[34m'
 RESET = '\033[0m'
@@ -18,6 +24,18 @@ months = {
     "12": "Dec",
 }
 
+"""_summary_
+    LoadFileData class loads the data from files and make data structure of the data which coming from files
+    [
+        dict of every single file
+        {
+            dict of every single date with their fields and value
+            date: {
+                fields:  value
+            }    
+        }
+    ]
+"""
 class LoadFileData:
     def __init__(self, year, month):
         self.year = year
@@ -25,6 +43,11 @@ class LoadFileData:
         self.data = []
         self.readDatadromFiles()
         
+    """_summary_
+        read data from every single file 
+        if month is None then it iterate over all the months that is present in the months global variable
+        if month is present then it only iterate over the single month
+    """
     def readDatadromFiles(self):
         if self.month == None:
             for month in months.values():
@@ -34,7 +57,15 @@ class LoadFileData:
                 raise Exception("No file is found")
         else: 
             self.readDataFromSingleFile(months[self.month])
-            
+    
+    """
+    This function is make connection with the single file and then read the data line by line from the file
+    it read first line and set the column names or the fields name from the first line of the file and then
+    set it in the col_name to make dict
+    then it read the other lines one by one and then pick the field name from col_name and value from the 
+    temperature record (temp_record) and make the dict
+    
+    """    
     def readDataFromSingleFile(self, month):
         try :
             with open(f'weather_reports/Murree_weather_{self.year}_{month}.txt', 'r') as file:
@@ -80,28 +111,11 @@ class CalculateTemperatureValues:
             raise Exception("Incorrect Input")
     
     def _calculateTemperatureWithField(self, field, unit, maxNumber):
-        # required_number = None
-        # required_date = ''
         required_data = ""
         for single_file_record in self.data:
             required_data = self._calculateInfoFromFile(single_file_record, field, maxNumber)
-            # for single_date_key in single_file_record.keys():
-            #     temperature = single_file_record[single_date_key][field]
-                
-            #     if(required_number == None or required_number == ''): required_number = temperature
-            #     if temperature != '':
-            #         if maxNumber and int(temperature) > int(required_number):
-            #             required_number = temperature
-            #             required_date = single_date_key
-            #         elif not maxNumber and  int(temperature) < int(required_number):
-            #             required_date = single_date_key
-            #             required_number = temperature
                         
         return required_data
-        # return {
-        #     "temperature": required_number,
-        #     "date": required_date
-        # }
         
     def _calculateInfoFromFile(self, single_file_record, field, maxNumber):
         required_number = None
@@ -149,7 +163,7 @@ def displayYearData(year):
     # print(high_humidity["date"])
     print(f'Humidity: {high_humidity["temperature"] or 0}% on {datetime.strptime(high_humidity["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
-def displayMonthData(year, month, bar):
+def displayMonthData(year, month, bar_count):
     files_data = LoadFileData(year, month)
     calObj = CalculateTemperatureValues(files_data.data)
     
@@ -161,9 +175,9 @@ def displayMonthData(year, month, bar):
         
     avg_mean_humidity = calObj.calculateTemperature('avg_Hu')
     print(f'Average Mean Humidity: {avg_mean_humidity["temperature"] or 0}%')
-    displayReport(calObj, bar = bar)
+    displayReport(calObj, bar_count = bar_count)
     
-def displayReport(calObj, bar = 2):
+def displayReport(calObj, bar_count = 2):
     swap = True
     display_record = {}
     for value in calObj.getSingleDateRecord():
@@ -184,7 +198,7 @@ def displayReport(calObj, bar = 2):
                 signs += f'{BLUE}+'
                 
         display_record[(swap and 'max_temp_sign') or 'min_temp_sign'] = signs
-        if bar < 2:
+        if bar_count < 2:
             if(not swap): print(f'{display_record["date"]} {display_record["min_temp_sign"]}{display_record["max_temp_sign"]}{RESET} {display_record["min_temp"]}-{display_record["max_temp"]}')
         else: 
             if(swap):
@@ -202,8 +216,8 @@ def main():
     for file_date in splitted_files_date:
         splitted_file_date = file_date.split('/')
         if len(splitted_file_date) >= 2:
-            bar = int(input("Please Enter Number of Report Bars 1-2: "))
-            displayMonthData(splitted_file_date[0], splitted_file_date[1], bar)
+            bar_count = int(input("Please Enter Number of Report bar_counts 1-2: "))
+            displayMonthData(splitted_file_date[0], splitted_file_date[1], bar_count)
         else: 
             displayYearData(splitted_file_date[0])
     
