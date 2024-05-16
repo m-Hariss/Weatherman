@@ -57,6 +57,8 @@ class LoadFileData:
                 raise Exception("No file is found")
         else: 
             self.readDataFromSingleFile(months[self.month])
+            if len(self.data) == 0:
+                raise Exception("No file is found")
     
     """
     This function is make connection with the single file and then read the data line by line from the file
@@ -91,8 +93,8 @@ class LoadFileData:
             
         
 class CalculateTemperatureValues:
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, file_obj):
+        self.data = file_obj
         
     def calculateTemperature(self, type_of_calculation):
         if type_of_calculation == 'H':
@@ -112,7 +114,7 @@ class CalculateTemperatureValues:
     
     def _calculateTemperatureWithField(self, field, maxNumber):
         required_data = ""
-        for single_file_record in self.data:
+        for single_file_record in self.data.data:
             required_data = self._calculateInfoFromFile(single_file_record, field, maxNumber)
                         
         return required_data
@@ -139,7 +141,7 @@ class CalculateTemperatureValues:
             return single_file_record[single_date_key][field]
          
     def getSingleDateRecord(self): 
-        for single_file_record in self.data:
+        for single_file_record in self.data.data:
             for date in single_file_record.keys():
                 max_temp = single_file_record[date]['Max TemperatureC']
                 min_temp = single_file_record[date]['Min TemperatureC']
@@ -149,7 +151,7 @@ class CalculateTemperatureValues:
 
 def displayYearData(year):
     files_data = LoadFileData(year, None)
-    calObj = CalculateTemperatureValues(files_data.data)
+    calObj = CalculateTemperatureValues(files_data)
     
     highest_temp = calObj.calculateTemperature('H')
     # print(highest_temp["date"])
@@ -165,7 +167,7 @@ def displayYearData(year):
 
 def displayMonthData(year, month, bar_count):
     files_data = LoadFileData(year, month)
-    calObj = CalculateTemperatureValues(files_data.data)
+    calObj = CalculateTemperatureValues(files_data)
     
     avg_high_temp = calObj.calculateTemperature('avg_H')
     print(f'Highest Average: {avg_high_temp["temperature"] or 0}C')
@@ -178,6 +180,7 @@ def displayMonthData(year, month, bar_count):
     displayReport(calObj, bar_count = bar_count)
     
 def displayReport(calObj, bar_count = 2):
+    print(f'\n{months[calObj.data.month]} {calObj.data.year}')
     swap = True
     display_record = {}
     for value in calObj.getSingleDateRecord():
@@ -218,8 +221,10 @@ def main():
         if len(splitted_file_date) >= 2:
             bar_count = int(input("Please Enter Number of Report bar_counts 1-2: "))
             displayMonthData(splitted_file_date[0], splitted_file_date[1], bar_count)
+            print('')
         else: 
             displayYearData(splitted_file_date[0])
+            print('')
     
     
 main()
