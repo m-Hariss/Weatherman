@@ -96,21 +96,21 @@ class CalculateTemperatureValues:
         
     def calculateTemperature(self, type_of_calculation):
         if type_of_calculation == 'H':
-            return self._calculateTemperatureWithField('Max TemperatureC','C', True)
+            return self._calculateTemperatureWithField('Max TemperatureC', True)
         elif type_of_calculation == 'L': 
-            return self._calculateTemperatureWithField('Min TemperatureC','C', False)
+            return self._calculateTemperatureWithField('Min TemperatureC', False)
         elif type_of_calculation == 'Hu': 
-            return self._calculateTemperatureWithField('Max Humidity','%', True)
+            return self._calculateTemperatureWithField('Max Humidity', True)
         elif type_of_calculation == 'avg_L':
-            return self._calculateTemperatureWithField('Mean TemperatureC','C', False)
+            return self._calculateTemperatureWithField('Mean TemperatureC', False)
         elif type_of_calculation == 'avg_H':
-            return self._calculateTemperatureWithField('Mean TemperatureC','C', True)
+            return self._calculateTemperatureWithField('Mean TemperatureC', True)
         elif type_of_calculation == 'avg_Hu':
-            return self._calculateTemperatureWithField('Max Humidity', '%', True)
+            return self._calculateTemperatureWithField('Max Humidity', True)
         else:
             raise Exception("Incorrect Input")
     
-    def _calculateTemperatureWithField(self, field, unit, maxNumber):
+    def _calculateTemperatureWithField(self, field, maxNumber):
         required_data = ""
         for single_file_record in self.data:
             required_data = self._calculateInfoFromFile(single_file_record, field, maxNumber)
