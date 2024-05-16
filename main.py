@@ -186,16 +186,15 @@ def displayReport(calObj):
     
 def main():
     
-    year = input("Please Enter Year and Month: ")
-    splitted_year = year.split('/')
+    file_dates = input("Please Enter Year and Month: ")
+    splitted_files_date = file_dates.split(' ')
     
-    # try: 
-    if len(splitted_year) >= 2:
-        displayMonthData(splitted_year[0], splitted_year[1])
-    else: 
-        displayYearData(splitted_year[0])
-        
-    # except: 
-    # print('Some thing went wrong ')
+    for file_date in splitted_files_date:
+        splitted_file_date = file_date.split('/')
+        if len(splitted_file_date) >= 2:
+            displayMonthData(splitted_file_date[0], splitted_file_date[1])
+        else: 
+            displayYearData(splitted_file_date[0])
+    
     
 main()
