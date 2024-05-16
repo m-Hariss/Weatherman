@@ -102,36 +102,43 @@ months = {
     "12": "Dec",
 }
 
+def displayYearData(year):
+    files_data = LoadFileData(year, None)
+    calObj = CalculateTemperatureValues(files_data.data)
+    
+    highest_temp = calObj.calculateTemperature('H')
+    print(f'Highest: {highest_temp["temperature"] or 0}C on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
+    lowest_temp = calObj.calculateTemperature('L')
+    print(f'Lowest: {lowest_temp["temperature"] or 0}C on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
+
+    high_humidity = calObj.calculateTemperature('Hu')
+    print(f'Humidity: {high_humidity["temperature"] or 0}% on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
+
+def displayMonthData(year, month):
+    files_data = LoadFileData(year, month)
+    calObj = CalculateTemperatureValues(files_data.data)
+    
+    avg_high_temp = calObj.calculateTemperature('avg_H')
+    print(f'Highest Average: {avg_high_temp["temperature"] or 0}C')
+        
+    avg_low_temp = calObj.calculateTemperature('avg_L')
+    print(f'Lowest Average: {avg_low_temp["temperature"] or 0}C')
+        
+    avg_mean_humidity = calObj.calculateTemperature('avg_Hu')
+    print(f'Average Mean Humidity: {avg_mean_humidity["temperature"] or 0}%')
+    
 def main():
-
+    
     year = input("Please Enter Year and Month: ")
     splitted_year = year.split('/')
     
     try: 
         if len(splitted_year) >= 2:
-            files_data = LoadFileData(splitted_year[0], splitted_year[1])
+            displayMonthData(splitted_year[0], splitted_year[1])
         else: 
-            files_data = LoadFileData(splitted_year[0], None)
-            
-        calObj = CalculateTemperatureValues(files_data.data)
-        highest_temp = calObj.calculateTemperature('H')
-        print(f'Highest: {highest_temp["temperature"]}C on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
-
-        lowest_temp = calObj.calculateTemperature('L')
-        print(f'Lowest: {lowest_temp["temperature"]}C on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
-
-        high_humidity = calObj.calculateTemperature('Hu')
-        print(f'Humidity: {high_humidity["temperature"]}% on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
+            displayYearData(splitted_year[0])
         
-        avg_high_temp = calObj.calculateTemperature('avg_H')
-        print(f'Highest Average: {avg_high_temp["temperature"]}C')
-        
-        avg_low_temp = calObj.calculateTemperature('avg_L')
-        print(f'Lowest Average: {avg_low_temp["temperature"]}C')
-        
-        avg_mean_humidity = calObj.calculateTemperature('avg_Hu')
-        print(f'Average Mean Humidity: {avg_mean_humidity["temperature"]}%')
     except: 
         print('Some thing went wrong ')
     
