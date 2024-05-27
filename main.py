@@ -1,28 +1,6 @@
 from datetime import datetime
-"""_summary_
-    global variables
-    RED is used to display red color text on console
-    BLUE is used to display blue color text on console
-    RESET is used to display default color text on console
-    months is dict of month name with month number
-"""
-RED = '\033[31m'
-BLUE = '\033[34m'
-RESET = '\033[0m'
-months = {
-    "1": "Jan",
-    "2": "Feb",
-    "3": "Mar",
-    "4": "Apr",
-    "5": "May",
-    "6": "Jun",
-    "7": "Jul",
-    "8": "Aug",
-    "9": "Sep",
-    "10": "Oct",
-    "11": "Nov",
-    "12": "Dec",
-}
+from constants import RED, BLUE, RESET, months 
+
 
 """_summary_
     LoadFileData class loads the data from files and make data structure of the data which coming from files
@@ -73,23 +51,23 @@ class LoadFileData:
             with open(f'weather_reports/Murree_weather_{self.year}_{month}.txt', 'r') as file:
                 single_file_records = {}
                 single_line = file.readline()
-                _, *col_names = single_line.split(',')
+                _, *column_names = single_line.split(',')
                 single_date_record = {}
                 
                 while True:
                     line = file.readline()
-                    if line:
+                    if not line:
+                        break
+                    else:
                         date, *temp_records = line.split(',')
                         for index in range(len(temp_records)):
-                            single_date_record[col_names[index]] = temp_records[index]
+                            single_date_record[column_names[index]] = temp_records[index]
                             
                         single_file_records.update({date: single_date_record})
                         single_date_record = {}  
-                    else:
-                        break
                 self.data.append(single_file_records)
         except : 
-            pass
+            print(f'{month}/{self.year} file is not exist')
             
         
 class CalculateTemperatureValues:
@@ -97,6 +75,9 @@ class CalculateTemperatureValues:
         self.data = file_obj
         
     def calculateTemperature(self, type_of_calculation):
+        """
+        call function according to the input
+        """
         if type_of_calculation == 'H':
             return self._calculateTemperatureWithField('Max TemperatureC', True)
         elif type_of_calculation == 'L': 
@@ -113,28 +94,34 @@ class CalculateTemperatureValues:
             raise Exception("Incorrect Input")
     
     def _calculateTemperatureWithField(self, field, maxNumber):
-        latest_data = ""
-        required_data = ""
+        """
+        calculate temperature values with the hrlp of given dict field from a single file
+        """
+        new_temperature_record = "" 
+        required_temperature_record = ""
         for single_file_record in self.data.data:
-            latest_data = self._calculateInfoFromFile(single_file_record, field, maxNumber)
-            if(not required_data):
-                required_data = latest_data
+            new_temperature_record = self._calculateInfoFromFile(single_file_record, field, maxNumber)
+            if(not required_temperature_record):
+                required_temperature_record = new_temperature_record
                 
-            if(maxNumber and latest_data["temperature"] > required_data["temperature"]):
-                required_data = latest_data 
+            if(maxNumber and new_temperature_record["temperature"] > required_temperature_record["temperature"]):
+                required_temperature_record = new_temperature_record 
             else:
-                if latest_data["temperature"] < required_data["temperature"]:
-                    required_data = latest_data 
+                if new_temperature_record["temperature"] < required_temperature_record["temperature"]:
+                    required_temperature_record = new_temperature_record 
                     
-            print(required_data)
+            # print(required_temperature_record)
                
-        return required_data
+        return required_temperature_record
         
     def _calculateInfoFromFile(self, single_file_record, field, maxNumber):
+        """
+        calculate temperature values from a single date of single file with the help of given field
+        """
         required_number = None
         required_date = ''
         for single_date_key in single_file_record.keys():
-                temperature = self._getFieldFromSingleDate(single_file_record, single_date_key, field)
+                temperature = single_file_record[single_date_key][field]
                 if(not required_number): required_number = temperature
                 if temperature != '':
                     if maxNumber and int(temperature) >= int(required_number):
@@ -147,11 +134,11 @@ class CalculateTemperatureValues:
             "temperature": required_number,
             "date": required_date
         }
-        
-    def _getFieldFromSingleDate(self, single_file_record, single_date_key, field):
-            return single_file_record[single_date_key][field]
          
     def getSingleDateRecord(self): 
+        """
+        return minmum temperature and maximum temperature or 0 if one of this is not exists from a single file data
+        """
         for single_file_record in self.data.data:
             for date in single_file_record.keys():
                 max_temp = single_file_record[date]['Max TemperatureC']
@@ -161,6 +148,9 @@ class CalculateTemperatureValues:
 
 
 def displayYearData(year):
+    """
+    display records of a single year
+    """
     files_data = LoadFileData(year, None)
     calObj = CalculateTemperatureValues(files_data)
     
@@ -177,6 +167,9 @@ def displayYearData(year):
     print(f'Humidity: {high_humidity["temperature"] or 0}% on {datetime.strptime(high_humidity["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
 def displayMonthData(year, month, bar_count):
+    """
+    display records of single month
+    """
     files_data = LoadFileData(year, month)
     calObj = CalculateTemperatureValues(files_data)
     
@@ -191,6 +184,9 @@ def displayMonthData(year, month, bar_count):
     displayReport(calObj, bar_count = bar_count)
     
 def displayReport(calObj, bar_count = 2):
+    """
+    display report of month or year in 1 or 2 bars which given by the user
+    """
     print(f'\n{months[calObj.data.month]} {calObj.data.year}')
     swap = True
     display_record = {}
