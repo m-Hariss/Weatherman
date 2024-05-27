@@ -97,22 +97,22 @@ class CalculateTemperatureValues:
         """
         calculate temperature values with the hrlp of given dict field from a single file
         """
-        new_temperature_record = "" 
-        required_temperature_record = ""
+        new_temperature_detail = "" 
+        required_temperature_detail = ""
         for single_file_record in self.data.data:
-            new_temperature_record = self._calculateInfoFromFile(single_file_record, field, maxNumber)
-            if(not required_temperature_record):
-                required_temperature_record = new_temperature_record
+            new_temperature_detail = self._calculateInfoFromFile(single_file_record, field, maxNumber)
+            if(not required_temperature_detail):
+                required_temperature_detail = new_temperature_detail
                 
-            if(maxNumber and new_temperature_record["temperature"] > required_temperature_record["temperature"]):
-                required_temperature_record = new_temperature_record 
+            if(maxNumber and new_temperature_detail["temperature"] > required_temperature_detail["temperature"]):
+                required_temperature_detail = new_temperature_detail 
             else:
-                if new_temperature_record["temperature"] < required_temperature_record["temperature"]:
-                    required_temperature_record = new_temperature_record 
+                if new_temperature_detail["temperature"] < required_temperature_detail["temperature"]:
+                    required_temperature_detail = new_temperature_detail 
                     
-            # print(required_temperature_record)
+            # print(required_temperature_detail)
                
-        return required_temperature_record
+        return required_temperature_detail
         
     def _calculateInfoFromFile(self, single_file_record, field, maxNumber):
         """
