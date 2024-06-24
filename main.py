@@ -30,12 +30,12 @@ class ReadFilesData:
             for month in months.values():
                 self.readDataFromSingleFile(month)
                 
-            if len(self.data) == 0:
-                raise Exception("No file is found")
         else: 
             self.readDataFromSingleFile(months[self.month])
-            if len(self.data) == 0:
-                raise Exception("No file is found")
+
+        if len(self.data) == 0:
+            raise Exception("No file is found")
+            
     
     """
     This function is make connection with the single file and then read the data line by line from the file
