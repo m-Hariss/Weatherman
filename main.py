@@ -1,5 +1,5 @@
 from datetime import datetime
-from constants import RED, BLUE, RESET, months, TEMPERATURE_FIELDS
+from constants import RED, BLUE, RESET, months, TEMPERATURE_FIELDS, BASE_FILE_NAME, parser
 import sys
 """_summary_
     ReadFilesData class loads the data from files and make data structure of the data which coming from files
@@ -47,7 +47,7 @@ class ReadFilesData:
     """    
     def readDataFromSingleFile(self, month):
         try :
-            with open('weather_reports/Murree_weather_{}_{}.txt'.format(self.year, month), 'r') as file:
+            with open(BASE_FILE_NAME.format(self.year, month), 'r') as file:
                 single_file_records = {}
                 single_line = file.readline()
                 _, *column_names = single_line.split(',')
@@ -66,7 +66,8 @@ class ReadFilesData:
                         single_date_record = {}  
                 self.data.append(single_file_records)
         except : 
-            print('{}/{} file is not exist'.format(month, self.year))
+            # print('{}/{} file is not exist'.format(month, self.year))
+            return
             
         
 class TemperatureCalculation:
@@ -78,16 +79,16 @@ class TemperatureCalculation:
         call function according to the input
         """
         temperature_field = TEMPERATURE_FIELDS[type_of_calculation]
-        return self._temperatureCalculationFromFiles(temperature_field["name"], temperature_field["maximum_number"])
+        return self._temperatureCalculationFromFilesData(temperature_field["name"], temperature_field["maximum_number"])
     
-    def _temperatureCalculationFromFiles(self, field, maxNumber):
+    def _temperatureCalculationFromFilesData(self, field, maxNumber):
         """
         calculate temperature values with the hrlp of given dict field from a single file
         """
         new_temperature_detail = "" 
         required_temperature_detail = ""
         for single_file_record in self.data.data:
-            new_temperature_detail = self._temperatureCalculationFromFile(single_file_record, field, maxNumber)
+            new_temperature_detail = self._temperatureCalculationFromFileData(single_file_record, field, maxNumber)
             if(not required_temperature_detail):
                 required_temperature_detail = new_temperature_detail
                 
@@ -101,7 +102,7 @@ class TemperatureCalculation:
                
         return required_temperature_detail
         
-    def _temperatureCalculationFromFile(self, single_file_record, field, maxNumber):
+    def _temperatureCalculationFromFileData(self, single_file_record, field, maxNumber):
         """
         calculate temperature values from a single date of single file with the help of given field
         """
@@ -138,43 +139,44 @@ def displayYearlyDataCalculation(year):
     display records of a single year
     """
     files_data = ReadFilesData(year, None)
-    temperature_calculation_obj = TemperatureCalculation(files_data)
+    temperature_calculator = TemperatureCalculation(files_data)
     
-    highest_temp = temperature_calculation_obj.requiredTemperatureCalculation("H")
+    highest_temp = temperature_calculator.requiredTemperatureCalculation("H")
     print(f'Highest: {highest_temp["temperature"] or 0}C on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
-    lowest_temp = temperature_calculation_obj.requiredTemperatureCalculation("L")
+    lowest_temp = temperature_calculator.requiredTemperatureCalculation("L")
     print(f'Lowest: {lowest_temp["temperature"] or 0}C on {datetime.strptime(lowest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
-    high_humidity = temperature_calculation_obj.requiredTemperatureCalculation("Hu")
+    high_humidity = temperature_calculator.requiredTemperatureCalculation("Hu")
     print(f'Humidity: {high_humidity["temperature"] or 0}% on {datetime.strptime(high_humidity["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
-def displayMonthlyDataCalculation(year, month, bar_count):
+def displayMonthlyDataCalculation(year, month, display_chart=False):
     """
     display records of single month
     """
     files_data = ReadFilesData(year, month)
-    temperature_calculation_obj = TemperatureCalculation(files_data)
+    temperature_calculator = TemperatureCalculation(files_data)
     
-    avg_high_temp = temperature_calculation_obj.requiredTemperatureCalculation("avg_H")
+    avg_high_temp = temperature_calculator.requiredTemperatureCalculation("avg_H")
     print(f'Highest Average: {avg_high_temp["temperature"] or 0}C')
     
-    avg_low_temp = temperature_calculation_obj.requiredTemperatureCalculation("avg_L")
+    avg_low_temp = temperature_calculator.requiredTemperatureCalculation("avg_L")
     print(f'Lowest Average: {avg_low_temp["temperature"] or 0}C')
         
-    avg_mean_humidity = temperature_calculation_obj.requiredTemperatureCalculation("avg_Hu")
+    avg_mean_humidity = temperature_calculator.requiredTemperatureCalculation("avg_Hu")
     print(f'Average Mean Humidity: {avg_mean_humidity["temperature"] or 0}%')
 
-    displayMonthlyReportBars(temperature_calculation_obj, bar_count = bar_count)
+    if(display_chart):
+        displayMonthlyReportChart(temperature_calculator)
     
-def displayMonthlyReportBars(temperature_calculation_obj, bar_count = 2):
+def displayMonthlyReportChart(temperature_calculator):
     """
     display report of month or year in 1 or 2 bars which given by the user
     """
-    print(f'\n{months[temperature_calculation_obj.data.month]} {temperature_calculation_obj.data.year}')
+    print(f'\n{months[temperature_calculator.data.month]} {temperature_calculator.data.year}')
     swap = True
     display_record = {}
-    for value in temperature_calculation_obj.singleDateRecordGenerater():
+    for value in temperature_calculator.singleDateRecordGenerater():
         splitted_date  = value and value["date"].split('-')
         if(not splitted_date): 
             swap = not swap
@@ -192,29 +194,49 @@ def displayMonthlyReportBars(temperature_calculation_obj, bar_count = 2):
                 signs += f'{BLUE}+'
                 
         display_record[(swap and 'max_temp_sign') or 'min_temp_sign'] = signs
-        if bar_count < 2:
-            if(not swap): print(f'{display_record["date"]} {display_record["min_temp_sign"]}{display_record["max_temp_sign"]}{RESET} {display_record["min_temp"]}-{display_record["max_temp"]}')
-        else: 
-            if(swap):
-                print(f'{display_record["date"]} {display_record["max_temp_sign"]}{RESET} {display_record["max_temp"]}')
-            else:
-                print(f'{display_record["date"]} {display_record["min_temp_sign"]}{RESET} {display_record["min_temp"]}')
+        # if bar_count < 2:
+        if(not swap): print(f'{display_record["date"]} {display_record["min_temp_sign"]}{display_record["max_temp_sign"]}{RESET} {display_record["min_temp"]}-{display_record["max_temp"]}')
+        # else: 
+        #     if(swap):
+        #         print(f'{display_record["date"]} {display_record["max_temp_sign"]}{RESET} {display_record["max_temp"]}')
+        #     else:
+        #         print(f'{display_record["date"]} {display_record["min_temp_sign"]}{RESET} {display_record["min_temp"]}')
                 
         swap = not swap
     
 def main():
+    args = parser.parse_args()
+    print(args.average)
+    if(args.estimation):
+        displayYearlyDataCalculation(args.estimation)
+        print('')
+    if(args.average):
+        splitted_file_date = args.average.split('/')
+        displayMonthlyDataCalculation(splitted_file_date[0], splitted_file_date[1], False)
+        print('')
     
-    for file_date in sys.argv[1:]:
-        splitted_file_date = file_date.split('/')
-        try:
-            if len(splitted_file_date) >= 2:
-                bar_count = int(input("Please Enter Number of Report bar_counts 1-2: "))
-                displayMonthlyDataCalculation(splitted_file_date[0], splitted_file_date[1], bar_count)
-                print('')
-            else: 
-                displayYearlyDataCalculation(splitted_file_date[0])
-                print('')
-        except:
-            print('Something went wrong!')
+    if(args.average == args.chart):
+        splitted_file_date = args.average.split('/')
+        displayMonthlyDataCalculation(splitted_file_date[0], splitted_file_date[1], True)
+        print('')
+    elif(args.chart):
+        print('chart')
+        splitted_file_date = args.chart.split('/')
+        files_data = ReadFilesData(splitted_file_date[0], splitted_file_date[1])
+        temperature_calculator = TemperatureCalculation(files_data)
+        displayMonthlyReportChart(temperature_calculator)
+    #             print('')
+    # for file_date in sys.argv[1:]:
+    #     splitted_file_date = file_date.split('/')
+    #     try:
+    #         if len(splitted_file_date) >= 2:
+    #             bar_count = int(input("Please Enter Number of Report bar_counts 1-2: "))
+    #             displayMonthlyDataCalculation(splitted_file_date[0], splitted_file_date[1], bar_count)
+    #             print('')
+    #         else: 
+    #             displayYearlyDataCalculation(splitted_file_date[0])
+    #             print('')
+    #     except:
+    #         print('Something went wrong!')
     
 main()

@@ -1,3 +1,5 @@
+import argparse
+
 """_summary_
     global variables
     RED is used to display red color text on console
@@ -31,3 +33,8 @@ TEMPERATURE_FIELDS = {
     'avg_Hu': { 'name': 'Max Humidity', 'maximum_number': True },
 
 }
+BASE_FILE_NAME = 'weather_reports/Murree_weather_{}_{}.txt'
+parser = argparse.ArgumentParser()
+parser.add_argument("-e", "--estimation", type=int, help="Estimated Temperature of the year", default=None)
+parser.add_argument("-a", "--average", type=str, help="Average Temperature of the month", default=None)
+parser.add_argument("-c", "--chart", type=str, help="Chart of the Temperature of the month", default=None)
