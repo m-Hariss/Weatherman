@@ -22,3 +22,12 @@ months = {
     "11": "Nov",
     "12": "Dec",
 }
+TEMPERATURE_FIELDS = {
+    'H': { 'name': 'Max TemperatureC', 'maximum_number': True },
+    'L': { 'name': 'Min TemperatureC', 'maximum_number': False },
+    'Hu': { 'name': 'Max Humidity', 'maximum_number': True },
+    'avg_L': { 'name': 'Mean TemperatureC', 'maximum_number': False },
+    'avg_H': { 'name': 'Mean TemperatureC', 'maximum_number': True },
+    'avg_Hu': { 'name': 'Max Humidity', 'maximum_number': True },
+
+}

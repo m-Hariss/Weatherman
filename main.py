@@ -1,7 +1,6 @@
 from datetime import datetime
-from constants import RED, BLUE, RESET, months 
-
-
+from constants import RED, BLUE, RESET, months, TEMPERATURE_FIELDS
+import sys
 """_summary_
     LoadFileData class loads the data from files and make data structure of the data which coming from files
     [
@@ -48,7 +47,7 @@ class LoadFileData:
     """    
     def readDataFromSingleFile(self, month):
         try :
-            with open(f'weather_reports/Murree_weather_{self.year}_{month}.txt', 'r') as file:
+            with open('weather_reports/Murree_weather_{}_{}.txt'.format(self.year, month), 'r') as file:
                 single_file_records = {}
                 single_line = file.readline()
                 _, *column_names = single_line.split(',')
@@ -59,15 +58,15 @@ class LoadFileData:
                     if not line:
                         break
                     else:
-                        date, *temp_records = line.split(',')
-                        for index in range(len(temp_records)):
-                            single_date_record[column_names[index]] = temp_records[index]
+                        date, *temperature_records = line.split(',')
+                        for index in range(len(temperature_records)):
+                            single_date_record[column_names[index]] = temperature_records[index]
                             
                         single_file_records.update({date: single_date_record})
                         single_date_record = {}  
                 self.data.append(single_file_records)
         except : 
-            print(f'{month}/{self.year} file is not exist')
+            print('{}/{} file is not exist'.format(month, self.year))
             
         
 class CalculateTemperatureValues:
@@ -78,20 +77,8 @@ class CalculateTemperatureValues:
         """
         call function according to the input
         """
-        if type_of_calculation == 'H':
-            return self._calculateTemperatureWithField('Max TemperatureC', True)
-        elif type_of_calculation == 'L': 
-            return self._calculateTemperatureWithField('Min TemperatureC', False)
-        elif type_of_calculation == 'Hu': 
-            return self._calculateTemperatureWithField('Max Humidity', True)
-        elif type_of_calculation == 'avg_L':
-            return self._calculateTemperatureWithField('Mean TemperatureC', False)
-        elif type_of_calculation == 'avg_H':
-            return self._calculateTemperatureWithField('Mean TemperatureC', True)
-        elif type_of_calculation == 'avg_Hu':
-            return self._calculateTemperatureWithField('Max Humidity', True)
-        else:
-            raise Exception("Incorrect Input")
+        temperature_field = TEMPERATURE_FIELDS[type_of_calculation]
+        return self._calculateTemperatureWithField(temperature_field["name"], temperature_field["maximum_number"])
     
     def _calculateTemperatureWithField(self, field, maxNumber):
         """
@@ -154,15 +141,15 @@ def displayYearData(year):
     files_data = LoadFileData(year, None)
     calObj = CalculateTemperatureValues(files_data)
     
-    highest_temp = calObj.calculateTemperature('H')
+    highest_temp = calObj.calculateTemperature("H")
     # print(highest_temp["date"])
     print(f'Highest: {highest_temp["temperature"] or 0}C on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
-    lowest_temp = calObj.calculateTemperature('L')
+    lowest_temp = calObj.calculateTemperature("L")
     # print(lowest_temp["date"])
     print(f'Lowest: {lowest_temp["temperature"] or 0}C on {datetime.strptime(lowest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
-    high_humidity = calObj.calculateTemperature('Hu')
+    high_humidity = calObj.calculateTemperature("Hu")
     # print(high_humidity["date"])
     print(f'Humidity: {high_humidity["temperature"] or 0}% on {datetime.strptime(high_humidity["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
@@ -173,13 +160,13 @@ def displayMonthData(year, month, bar_count):
     files_data = LoadFileData(year, month)
     calObj = CalculateTemperatureValues(files_data)
     
-    avg_high_temp = calObj.calculateTemperature('avg_H')
+    avg_high_temp = calObj.calculateTemperature("avg_H")
     print(f'Highest Average: {avg_high_temp["temperature"] or 0}C')
     
-    avg_low_temp = calObj.calculateTemperature('avg_L')
+    avg_low_temp = calObj.calculateTemperature("avg_L")
     print(f'Lowest Average: {avg_low_temp["temperature"] or 0}C')
         
-    avg_mean_humidity = calObj.calculateTemperature('avg_Hu')
+    avg_mean_humidity = calObj.calculateTemperature("avg_Hu")
     print(f'Average Mean Humidity: {avg_mean_humidity["temperature"] or 0}%')
     displayReport(calObj, bar_count = bar_count)
     
@@ -220,18 +207,17 @@ def displayReport(calObj, bar_count = 2):
     
 def main():
     
-    file_dates = input("Please Enter Year and Month: ")
-    splitted_files_date = file_dates.split(' ')
-    
-    for file_date in splitted_files_date:
+    for file_date in sys.argv[1:]:
         splitted_file_date = file_date.split('/')
-        if len(splitted_file_date) >= 2:
-            bar_count = int(input("Please Enter Number of Report bar_counts 1-2: "))
-            displayMonthData(splitted_file_date[0], splitted_file_date[1], bar_count)
-            print('')
-        else: 
-            displayYearData(splitted_file_date[0])
-            print('')
-    
+        try:
+            if len(splitted_file_date) >= 2:
+                bar_count = int(input("Please Enter Number of Report bar_counts 1-2: "))
+                displayMonthData(splitted_file_date[0], splitted_file_date[1], bar_count)
+                print('')
+            else: 
+                displayYearData(splitted_file_date[0])
+                print('')
+        except:
+            print('Something went wrong!')
     
 main()
