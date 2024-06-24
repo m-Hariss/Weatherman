@@ -2,7 +2,7 @@ from datetime import datetime
 from constants import RED, BLUE, RESET, months, TEMPERATURE_FIELDS
 import sys
 """_summary_
-    LoadFileData class loads the data from files and make data structure of the data which coming from files
+    ReadFilesData class loads the data from files and make data structure of the data which coming from files
     [
         dict of every single file
         {
@@ -13,7 +13,7 @@ import sys
         }
     ]
 """
-class LoadFileData:
+class ReadFilesData:
     def __init__(self, year, month):
         self.year = year
         self.month = month
@@ -69,25 +69,25 @@ class LoadFileData:
             print('{}/{} file is not exist'.format(month, self.year))
             
         
-class CalculateTemperatureValues:
-    def __init__(self, file_obj):
-        self.data = file_obj
+class TemperatureCalculation:
+    def __init__(self, data_from_files):
+        self.data = data_from_files
         
-    def calculateTemperature(self, type_of_calculation):
+    def requiredTemperatureCalculation(self, type_of_calculation):
         """
         call function according to the input
         """
         temperature_field = TEMPERATURE_FIELDS[type_of_calculation]
-        return self._calculateTemperatureWithField(temperature_field["name"], temperature_field["maximum_number"])
+        return self._temperatureCalculationFromFiles(temperature_field["name"], temperature_field["maximum_number"])
     
-    def _calculateTemperatureWithField(self, field, maxNumber):
+    def _temperatureCalculationFromFiles(self, field, maxNumber):
         """
         calculate temperature values with the hrlp of given dict field from a single file
         """
         new_temperature_detail = "" 
         required_temperature_detail = ""
         for single_file_record in self.data.data:
-            new_temperature_detail = self._calculateInfoFromFile(single_file_record, field, maxNumber)
+            new_temperature_detail = self._temperatureCalculationFromFile(single_file_record, field, maxNumber)
             if(not required_temperature_detail):
                 required_temperature_detail = new_temperature_detail
                 
@@ -101,7 +101,7 @@ class CalculateTemperatureValues:
                
         return required_temperature_detail
         
-    def _calculateInfoFromFile(self, single_file_record, field, maxNumber):
+    def _temperatureCalculationFromFile(self, single_file_record, field, maxNumber):
         """
         calculate temperature values from a single date of single file with the help of given field
         """
@@ -122,7 +122,7 @@ class CalculateTemperatureValues:
             "date": required_date
         }
          
-    def getSingleDateRecord(self): 
+    def singleDateRecordGenerater(self): 
         """
         return minmum temperature and maximum temperature or 0 if one of this is not exists from a single file data
         """
@@ -133,51 +133,48 @@ class CalculateTemperatureValues:
                 yield (max_temp and {"date": date, "value": max_temp}) or 0
                 yield (min_temp and {"date": date, "value": min_temp}) or 0
 
-
-def displayYearData(year):
+def displayYearlyDataCalculation(year):
     """
     display records of a single year
     """
-    files_data = LoadFileData(year, None)
-    calObj = CalculateTemperatureValues(files_data)
+    files_data = ReadFilesData(year, None)
+    temperature_calculation_obj = TemperatureCalculation(files_data)
     
-    highest_temp = calObj.calculateTemperature("H")
-    # print(highest_temp["date"])
+    highest_temp = temperature_calculation_obj.requiredTemperatureCalculation("H")
     print(f'Highest: {highest_temp["temperature"] or 0}C on {datetime.strptime(highest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
-    lowest_temp = calObj.calculateTemperature("L")
-    # print(lowest_temp["date"])
+    lowest_temp = temperature_calculation_obj.requiredTemperatureCalculation("L")
     print(f'Lowest: {lowest_temp["temperature"] or 0}C on {datetime.strptime(lowest_temp["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
-    high_humidity = calObj.calculateTemperature("Hu")
-    # print(high_humidity["date"])
+    high_humidity = temperature_calculation_obj.requiredTemperatureCalculation("Hu")
     print(f'Humidity: {high_humidity["temperature"] or 0}% on {datetime.strptime(high_humidity["date"], "%Y-%m-%d").strftime("%B, %Y")}')
 
-def displayMonthData(year, month, bar_count):
+def displayMonthlyDataCalculation(year, month, bar_count):
     """
     display records of single month
     """
-    files_data = LoadFileData(year, month)
-    calObj = CalculateTemperatureValues(files_data)
+    files_data = ReadFilesData(year, month)
+    temperature_calculation_obj = TemperatureCalculation(files_data)
     
-    avg_high_temp = calObj.calculateTemperature("avg_H")
+    avg_high_temp = temperature_calculation_obj.requiredTemperatureCalculation("avg_H")
     print(f'Highest Average: {avg_high_temp["temperature"] or 0}C')
     
-    avg_low_temp = calObj.calculateTemperature("avg_L")
+    avg_low_temp = temperature_calculation_obj.requiredTemperatureCalculation("avg_L")
     print(f'Lowest Average: {avg_low_temp["temperature"] or 0}C')
         
-    avg_mean_humidity = calObj.calculateTemperature("avg_Hu")
+    avg_mean_humidity = temperature_calculation_obj.requiredTemperatureCalculation("avg_Hu")
     print(f'Average Mean Humidity: {avg_mean_humidity["temperature"] or 0}%')
-    displayReport(calObj, bar_count = bar_count)
+
+    displayMonthlyReportBars(temperature_calculation_obj, bar_count = bar_count)
     
-def displayReport(calObj, bar_count = 2):
+def displayMonthlyReportBars(temperature_calculation_obj, bar_count = 2):
     """
     display report of month or year in 1 or 2 bars which given by the user
     """
-    print(f'\n{months[calObj.data.month]} {calObj.data.year}')
+    print(f'\n{months[temperature_calculation_obj.data.month]} {temperature_calculation_obj.data.year}')
     swap = True
     display_record = {}
-    for value in calObj.getSingleDateRecord():
+    for value in temperature_calculation_obj.singleDateRecordGenerater():
         splitted_date  = value and value["date"].split('-')
         if(not splitted_date): 
             swap = not swap
@@ -212,10 +209,10 @@ def main():
         try:
             if len(splitted_file_date) >= 2:
                 bar_count = int(input("Please Enter Number of Report bar_counts 1-2: "))
-                displayMonthData(splitted_file_date[0], splitted_file_date[1], bar_count)
+                displayMonthlyDataCalculation(splitted_file_date[0], splitted_file_date[1], bar_count)
                 print('')
             else: 
-                displayYearData(splitted_file_date[0])
+                displayYearlyDataCalculation(splitted_file_date[0])
                 print('')
         except:
             print('Something went wrong!')
